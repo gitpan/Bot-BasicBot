@@ -1,14 +1,30 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         Bot-BasicBot
-version:      0.81
-version_from: lib/Bot/BasicBot.pm
-installdirs:  site
+---
+abstract: 'simple irc bot baseclass'
+author:
+  - 'Tom Insam <tom@jerakeen.org>'
+  - 'Hinrik Örn Sigurðsson <hinrik.sig@gmail.com>'
+build_requires: {}
+configure_requires:
+  ExtUtils::MakeMaker: 6.31
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 4.102342, CPAN::Meta::Converter version 2.102400'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Bot-BasicBot
+no_index:
+  directory:
+    - t
+    - xt
+    - examples
 requires:
-    POE:                           0.22
-    POE::Component::IRC:           4.0
-    Test::More:                    0.01
-    Text::Wrap:                    0
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.30
+  POE::Component::IRC: 6.50
+  Text::Wrap: 0
+resources:
+  bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Bot-BasicBot
+  homepage: http://search.cpan.org/dist/Bot-BasicBot/
+  license: http://dev.perl.org/licenses/
+  repository: git://github.com/hinrik/bot-basicbot.git
+version: 0.82
+x_authority: cpan:HINRIK

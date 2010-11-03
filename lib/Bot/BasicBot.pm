@@ -34,17 +34,21 @@ Basic bot system designed to make it easy to do simple bots, optionally
 forking longer processes (like searches) concurrently in the background.
 
 There are several examples of bots using Bot::BasicBot in the examples/
-folder in the Bot::BasicBot tarball. If you installed Bot::BasicBot through
-CPAN, see http://jerakeen.org/programming/Bot-BasicBot for more docs and
-examples.
+folder in the Bot::BasicBot tarball.
 
 A quick summary, though - You want to define your own package that
 subclasses Bot::BasicBot, override various methods (documented below),
-then call new() and run() on it.
+then call L<C<new>|/new> and L<C<run>|/run> on it.
 
 =cut
 
 package Bot::BasicBot;
+BEGIN {
+  $Bot::BasicBot::AUTHORITY = 'cpan:HINRIK';
+}
+BEGIN {
+  $Bot::BasicBot::VERSION = '0.82';
+}
 
 use strict;
 use warnings;
@@ -56,15 +60,12 @@ use POE::Session;
 use POE::Wheel::Run;
 use POE::Filter::Line;
 use POE::Component::IRC;
+use POE::Component::IRC::Plugin::Connector;
 use Data::Dumper;
 use Text::Wrap ();
 
-our $VERSION = 0.81;
-
 use base qw( Exporter );
 our @EXPORT  = qw( say emote );
-
-our $RECONNECT_TIMEOUT = 500;
 
 =head1 STARTING THE BOT
 
@@ -124,8 +125,6 @@ sub run {
                 irc_msg          => "irc_said_state",
                 irc_public       => "irc_said_state",
                 irc_ctcp_action  => "irc_emoted_state",
-                irc_ping         => "irc_ping_state",
-                reconnect        => "reconnect",
 
                 irc_disconnected => "irc_disconnected_state",
                 irc_error        => "irc_error_state",
@@ -146,8 +145,7 @@ sub run {
                 irc_332          => "topic_raw_state",
                 irc_topic        => "topic_state",
 
-                irc_391          => "_time_state",
-                _get_time        => "_get_time_state",
+                irc_shutdown     => "shutdown_state",
                 
                 tick => "tick_state",
             }
@@ -159,7 +157,19 @@ sub run {
 
     # run
     $poe_kernel->run() unless $self->{no_run};
+    return;
 }
+
+=head1 STOPPING THE BOT
+
+To shut down the bot cleanly, use the L<C<shutdown>|/shutdown> method, which
+will (through L<C<AUTOLOAD>|/AUTOLOAD>) send an
+L<event|POE::Component::IRC/shutdown> of the same name to POE::Component::IRC,
+so it takes the same arguments:
+
+ $bot->shutdown( $bot->quit_message() );
+
+=cut
 
 =head1 METHODS TO OVERRIDE
 
@@ -175,7 +185,7 @@ you failed, in which case new() will die.
 
 =cut
 
-sub init { 1; }
+sub init { return 1; }
 
 
 =head2 said($args)
@@ -230,7 +240,7 @@ Returning undef will cause nothing to be said.
 
 =cut
 
-sub said { undef }
+sub said { return }
 
 =head2 emoted( $args )
 
@@ -244,7 +254,7 @@ C<emoted> receives the same data hash as C<said>.
 =cut
 
 sub emoted {
-    shift->said(@_);
+    return shift->said(@_);
 }
 
 =head2 chanjoin( $mess )
@@ -257,7 +267,7 @@ This is a do-nothing implementation, override this in your subclass.
 
 =cut
 
-sub chanjoin { undef }
+sub chanjoin { return }
 
 =head2 chanpart( $mess )
 
@@ -269,7 +279,7 @@ This is a do-nothing implementation, override this in your subclass.
 
 =cut
 
-sub chanpart { undef }
+sub chanpart { return }
 
 =head2 got_names( $mess )
 
@@ -290,7 +300,7 @@ method won't be called when that happens.
 
 =cut
 
-sub got_names { undef }
+sub got_names { return }
 
 =head2 topic( $mess )
 
@@ -300,7 +310,7 @@ channel, and $mess->{topic} will be the new topic of the channel.
 
 =cut
 
-sub topic { undef }
+sub topic { return }
 
 =head2 nick_change( $mess )
 
@@ -312,7 +322,7 @@ When a user changes nicks, this will be called. $mess looks like
 
 =cut
 
-sub nick_change { undef }
+sub nick_change { return }
 
 =head2 kicked( $mess )
 
@@ -328,7 +338,7 @@ The reply value is ignored.
 
 =cut
 
-sub kicked { undef }
+sub kicked { return }
 
 =head2 tick()
 
@@ -360,7 +370,7 @@ whatsoever apart from returning this text.
 
 =cut
 
-sub help { "Sorry, this bot has no interactive help." }
+sub help { return "Sorry, this bot has no interactive help." }
 
 =head2 connected
 
@@ -369,7 +379,7 @@ to the server
 
 =cut
 
-sub connected { undef }
+sub connected { return }
 
 =head2 userquit( $mess )
 
@@ -383,8 +393,8 @@ $mess looks like
 
 sub userquit {
     my ($self, $mess) = @_;
+    return;
 }
-
 
 
 =head1 BOT METHODS
@@ -405,6 +415,7 @@ sub schedule_tick {
   my $self = shift;
   my $time = shift || 5;
   $self->{kernel}->delay( tick => $time );
+  return;
 }
 
 =head2 forkit
@@ -480,7 +491,7 @@ sub forkit {
         $args = \%args;
     }
 
-    return undef unless $args->{run};
+    return unless $args->{run};
 
     $args->{handler}   = $args->{handler}   || "_fork_said";
     $args->{arguments} = $args->{arguments} || [];
@@ -518,7 +529,7 @@ sub forkit {
             address => $args->{address}
         }
     };
-    return undef;
+    return;
 }
 
 sub _fork_said {
@@ -530,6 +541,7 @@ sub _fork_said {
     $args->{body} = $body;
 
     $self->say($args);
+    return;
 }
 
 =head2 say( key => value, .. )
@@ -613,10 +625,12 @@ sub say {
     
     # post an event that will send the message
     for my $body (@bodies) {
-        my ($who, $body) = $self->charset_encode($who, $body);
-        #warn "$who => $body\n";
-        $poe_kernel->post( $self->{IRCNAME}, 'privmsg', $who, $body );
+        my ($enc_who, $enc_body) = $self->charset_encode($who, $body);
+        #warn "$enc_who => $enc_body\n";
+        $poe_kernel->post( $self->{IRCNAME}, 'privmsg', $enc_who, $enc_body );
     }
+
+    return;
 }
 
 =head2 emote( key => value, .. )
@@ -662,6 +676,7 @@ sub emote {
     # me too; i'll look at it in v0.5 - sb
 
     $poe_kernel->post( $self->{IRCNAME}, 'privmsg', $self->charset_encode($who, "\cAACTION " . $body . "\cA") );
+    return;
 }
 
 =head2 reply($mess, $body)
@@ -793,7 +808,7 @@ sub alt_nicks {
         my @args = ( ref $_[0] eq "ARRAY" ) ? @{ $_[0] } : @_;
         $self->{alt_nicks} = \@args;
     }
-    @{ $self->{alt_nicks} || [] };
+    return @{ $self->{alt_nicks} || [] };
 }
 
 =head2 username
@@ -806,7 +821,7 @@ will be the same as our nick.
 sub username {
     my $self = shift;
     $self->{username} = shift if @_;
-    $self->{username} or $self->nick;
+    return defined $self->{username} ? $self->{username} : $self->nick;
 }
 
 =head2 name
@@ -819,7 +834,7 @@ The name that the bot will identify itself as.  Defaults to
 sub name {
     my $self = shift;
     $self->{name} = shift if @_;
-    $self->{name} or $self->nick . " bot";
+    return defined $self->{name} ? $self->{name} : $self->nick . " bot";
 }
 
 =head2 channels
@@ -836,7 +851,7 @@ sub channels {
         my @args = ( ref $_[0] eq "ARRAY" ) ? @{ $_[0] } : @_;
         $self->{channels} = \@args;
     }
-    @{ $self->{channels} || [] };
+    return @{ $self->{channels} || [] };
 }
 
 =head2 quit_message
@@ -848,7 +863,7 @@ The quit message.  Defaults to "Bye".
 sub quit_message {
     my $self = shift;
     $self->{quit_message} = shift if @_;
-    defined( $self->{quit_message} ) ? $self->{quit_message} : "Bye";
+    return defined $self->{quit_message} ? $self->{quit_message} : "Bye";
 }
 
 =head2 ignore_list
@@ -866,7 +881,7 @@ sub ignore_list {
         my @args = ( ref $_[0] eq "ARRAY" ) ? @{ $_[0] } : @_;
         $self->{ignore_list} = \@args;
     }
-    @{ $self->{ignore_list} || [] };
+    return @{ $self->{ignore_list} || [] };
 }
 
 =head2 charset
@@ -897,7 +912,7 @@ Set to '1' to disable the built-in flood protection of POE::Compoent::IRC
 sub flood {
     my $self = shift;
     $self->{flood} = shift if @_;
-    $self->{flood};
+    return $self->{flood};
 }
 
 =head1 STATES
@@ -919,41 +934,10 @@ sub start_state {
 
     # Make an alias for our session, to keep it from getting GC'ed.
     $kernel->alias_set($self->{ALIASNAME});
-
-    $kernel->delay('reconnect', 1 );
-
     $kernel->delay('tick', 30);
-}
 
-=head2 reconnect
-
-Connects the bot to the IRC server. Called 1 second after the 'start'
-event.
-
-in an ideal world, this will never get called again - we schedule it for 'x'
-seconds in the future, and whenever we see a server ping we reset this
-counter again. This means that it'll get run if we haven't seen anything
-from the server for a while, so we can assume that something bad has
-happened. At that point we shotgun the IRC session and restart
-everything, so we reconnect to the server.
-
-This is by far the most reliable way I have found of ensuring that a bot
-will reconnect to a server after it's lost a network connection for some
-reason.
-
-By default, the timeout is 300 seconds. It can be set by changing
-$Bot::BasicBot::RECONNECT_TIMEOUT.
-
-=cut
-
-sub reconnect {
-    my ( $self, $kernel, $session ) = @_[ OBJECT, KERNEL, SESSION ];
-
-    $self->log("Trying to connect to server ".$self->server);
-
-    $kernel->call( $self->{IRCNAME}, 'disconnect' );
-    $kernel->call( $self->{IRCNAME}, 'shutdown' );
-    POE::Component::IRC->spawn( alias => $self->{IRCNAME} );
+    $self->{IRCOBJ} = POE::Component::IRC->spawn( alias => $self->{IRCNAME} );
+    $self->{IRCOBJ}->plugin_add('Connector', POE::Component::IRC::Plugin::Connector->new());
     $kernel->post( $self->{IRCNAME}, 'register', 'all' );
 
     $kernel->post($self->{IRCNAME}, 'connect',
@@ -972,8 +956,8 @@ sub reconnect {
             ),
         }
     );
-    $kernel->delay('reconnect', $RECONNECT_TIMEOUT);
-    $kernel->delay('_get_time', 60);
+
+    return;
 }
 
 =head2 stop_state
@@ -982,12 +966,7 @@ Called when we're stopping.  Shutdown the bot correctly.
 
 =cut
 
-sub stop_state {
-    my ( $self, $kernel ) = @_[ OBJECT, KERNEL ];
-
-    $kernel->post( $self->{IRCNAME}, 'quit', $self->charset_encode($self->quit_message) );
-    $kernel->alias_remove($self->{ALIASNAME});
-}
+sub stop_state { }
 
 =head2 irc_001_state
 
@@ -1013,32 +992,31 @@ sub irc_001_state {
     $self->schedule_tick(5);
 
     $self->connected();
+    return;
 }
 
 =head2 irc_disconnected_state
 
-Called if we are disconnected from the server. 
-Logs the error and schedules a reconnect event.
+Called if we are disconnected from the server. Logs the error.
 
 =cut
 
 sub irc_disconnected_state {
     my ( $self, $kernel, $server ) = @_[ OBJECT, KERNEL, ARG0 ];
     $self->log("Lost connection to server $server.\n");
-    $kernel->delay('reconnect', 30);
+    return;
 }
 
 =head2 irc_error_state
 
-Called if there is an irc server error.
-Logs the error and schedules a reconnect event.
+Called if there is an irc server error. Logs the error.
 
 =cut
 
 sub irc_error_state {
     my ( $self, $err, $kernel ) = @_[ OBJECT, ARG0, KERNEL ];
     $self->log("Server error occurred! $err\n");
-    $kernel->delay('reconnect', 30);
+    return;
 }
 
 =head2 irc_kicked_state
@@ -1056,6 +1034,7 @@ sub irc_kicked_state {
     my $nick = $self->nick_strip($nickstring);
     $_[OBJECT]->_remove_from_channel( $channel, $kicked );
     $self->kicked({ channel => $channel, who => $nick, kicked => $kicked, reason => $reason });
+    return;
 }
 
 =head2 irc_join_state
@@ -1066,6 +1045,7 @@ Called if someone joins.  Used for nick tracking
 
 sub irc_join_state {
     my ( $self, $nick ) = @_[ OBJECT, ARG0 ];
+    return;
 }
 
 =head2 irc_nick_state
@@ -1082,12 +1062,14 @@ sub irc_nick_state {
           = delete $self->{channel_data}{$channel}{$nick};
     }
     $self->nick_change($nick, $newnick);
+    return;
 }
 
 =head2 irc_mode_state
 
 =cut
 
+## no critic (ControlStructures::ProhibitCascadingIfElse)
 sub irc_mode_state {
     my ($self, $kernel, $session) = @_[OBJECT, KERNEL, SESSION];
     my ($nickstring, $channel, $mode, @ops) = @_[ARG0..$#_];
@@ -1100,23 +1082,24 @@ sub irc_mode_state {
 
         my $op = shift(@modes);
 
-        if ($added and $op eq 'o') {
+        if ($added && $op eq 'o') {
           $current->{op} = 1;
           $current->{voice} = 0;
 
-        } elsif ($added and $op eq 'v') {
+        } elsif ($added && $op eq 'v') {
           $current->{voice} = 1 unless $current->{op};
 
-        } elsif (!$added and $op eq 'o') {
+        } elsif (!$added && $op eq 'o') {
           $current->{op} = 0;
           $current->{voice} = 0;
 
-        } elsif (!$added and $op eq 'v') {
+        } elsif (!$added && $op eq 'v') {
           $current->{voice} = 1 unless $current->{op};
         }
 
         $self->{channel_data}{$channel}{$who} = $current;
     }
+    return;
 }
 
 
@@ -1135,6 +1118,7 @@ sub irc_quit_state {
     # do this second, so that the userquit implementor has a chance to see
     # which channels they left
     $self->_remove_from_all_channels( $nick );
+    return;
 }
 
 =head2 irc_said_state
@@ -1145,8 +1129,8 @@ formats it into a nicer format and calls 'said'
 =cut
 
 sub irc_said_state {
-    $_[KERNEL]->delay( 'reconnect', $RECONNECT_TIMEOUT );
     irc_received_state( 'said', 'say', @_ );
+    return;
 }
 
 =head2 irc_emoted_state
@@ -1158,8 +1142,8 @@ which deals with it as if it was a spoken phrase.
 =cut
 
 sub irc_emoted_state {
-    $_[KERNEL]->delay( 'reconnect', $RECONNECT_TIMEOUT );
     irc_received_state( 'emoted', 'emote', @_ );
+    return;
 }
 
 =head2 irc_received_state
@@ -1206,15 +1190,15 @@ sub irc_received_state {
 
     $mess->{body} = $body;
     unless ( $mess->{channel} eq "msg" ) {
-        my $nick = $self->nick;
+        my $own_nick = $self->nick;
 
-        if ( $mess->{body} =~ s/^(\Q$nick\E)\s*[:,-]?\s*//i ) {
+        if ( $mess->{body} =~ s/^(\Q$own_nick\E)\s*[:,-]?\s*//i ) {
           $mess->{address} = $1;
         }
 
-        foreach $nick ( $self->alt_nicks ) {
+        foreach my $alt_nick ( $self->alt_nicks ) {
             last if $mess->{address};
-            if ( $mess->{body} =~ s/^(\Q$nick\E)\s*[:,-]?\s*//i ) {
+            if ( $mess->{body} =~ s/^(\Q$alt_nick\E)\s*[:,-]?\s*//i ) {
               $mess->{address} = $1;
             }
         }
@@ -1247,25 +1231,6 @@ sub irc_received_state {
     }
 }
 
-=head2 irc_ping_state
-
-The most reliable way I've found of doing auto-server-rejoin is to listen for
-pings. Every ping we get, we put off rejoining the server for another few mins.
-If we haven't heard a ping in a while, the rejoin code will get called.
-
-Recently, I've adapted this for servers that don't send pings very often,
-and reset the counter any time _anything_ interesting happens.
-
-You can change the amount of time the bot waits between events before calling
-a reconnect event by changing $Bot::BasicBot::RECONNECT_TIMEOUT to a value in
-seconds. The default is '500'.
-
-=cut
-
-sub irc_ping_state {
-    $_[KERNEL]->delay( 'reconnect', $RECONNECT_TIMEOUT );
-}
-
 =head2 irc_chanjoin_state
 
 Called if someone joins a channel.
@@ -1274,7 +1239,6 @@ Called if someone joins a channel.
 
 sub irc_chanjoin_state {
     my $self = $_[OBJECT];
-    $_[KERNEL]->delay( 'reconnect', $RECONNECT_TIMEOUT );
     my ($channel, $nick) = @_[ ARG1, ARG0 ];
     $nick = $_[OBJECT]->nick_strip($nick);
     if ($self->nick eq $nick) {
@@ -1284,6 +1248,7 @@ sub irc_chanjoin_state {
     }
     $_[OBJECT]->_add_to_channel( $channel, $nick );
     irc_chan_received_state( 'chanjoin', 'say', @_ );
+    return;
 }
 
 =head2 irc_chanpart_state
@@ -1294,7 +1259,6 @@ Called if someone parts a channel.
 
 sub irc_chanpart_state {
     my $self = $_[OBJECT];
-    $_[KERNEL]->delay( 'reconnect', $RECONNECT_TIMEOUT );
     my ($channel, $nick) = @_[ ARG1, ARG0 ];
     $nick = $_[OBJECT]->nick_strip($nick);
     if ($self->nick eq $nick) {
@@ -1304,6 +1268,7 @@ sub irc_chanpart_state {
     }
     $_[OBJECT]->_remove_from_channel( $channel, $nick );
     irc_chan_received_state( 'chanpart', 'say', @_ );
+    return;
 }
 
 =head2 irc_chan_received_state
@@ -1356,6 +1321,7 @@ from memory.
 sub fork_close_state {
     my ( $self, $wheel_id ) = @_[ 0, ARG0 ];
     delete $self->{forks}->{$wheel_id};
+    return;
 }
 
 =head2 fork_error_state
@@ -1379,6 +1345,7 @@ sub tick_state {
     my ( $self, $kernel, $heap ) = @_[ OBJECT, KERNEL, HEAP ];
     my $delay = $self->tick();
     $self->schedule_tick($delay) if $delay;
+    return;
 }
 
 =head2 names_state
@@ -1402,6 +1369,7 @@ sub names_state {
       voice => $voice,
     }
   }
+  return;
 }
 
 =head2 names_done_state
@@ -1417,7 +1385,8 @@ sub names_done_state {
   my $built = delete $self->{building_channel_data}{$channel};
   return unless $built;
   $self->{channel_data}{$channel} = $built;
-  $self->names({ channel => $channel, names => $built });
+  #$self->names({ channel => $channel, names => $built });
+  return;
 }
 
 
@@ -1425,11 +1394,13 @@ sub _add_to_channel {
   my ($self, $channel, $nick, $ops) = @_;
   $ops ||= { op => 0, voice => 0 };
   $self->{channel_data}{$channel}{$nick} = $ops;
+  return;
 }
 
 sub _remove_from_channel {
   my ($self, $channel, $nick) = @_;
   delete $self->{channel_data}{$channel}{$nick};
+  return;
 }
 
 sub _remove_from_all_channels {
@@ -1439,6 +1410,7 @@ sub _remove_from_all_channels {
       $self->_remove_from_channel( $channel, $nick );
     }
   }
+  return;
 }
 
 =head2 topic_raw_state
@@ -1449,6 +1421,7 @@ sub topic_raw_state {
   my ($self, $kernel, $server, $raw) = @_[OBJECT, KERNEL, ARG0, ARG1];
   my ($channel, $topic) = split(/ :/, $raw, 2);
   $self->topic({ channel => $channel, who => undef, topic => $topic });
+  return;
 }
 
 =head2 topic_state
@@ -1460,30 +1433,30 @@ sub topic_state {
     = @_[OBJECT, KERNEL, ARG0, ARG1, ARG2];
   my $nick = $self->nick_strip($nickraw);
   $self->topic({ channel => $channel, who => $nick, topic => $topic });
+  return;
 }
 
+=head2 shutdown_state
 
-# the server can tell us what it thinks the time is. We use this as
-# a work-around for the 'broken' behaviour of freenode (it doesn't send
-# ping messages)
-sub _get_time_state {
-  my ($self, $kernel) = @_[OBJECT, KERNEL];
-  $_[KERNEL]->post( $self->{IRCNAME}, "time");
+=cut
+
+sub shutdown_state {
+    my ($kernel, $self) = @_[KERNEL, OBJECT];
+    $kernel->delay('tick');
+    $kernel->alias_remove($self->{ALIASNAME});
+    for my $fork (values %{ $self->{forks} }) {
+        $fork->{wheel}->kill();
+    }
+    return;
 }
-sub _time_state {
-  my ($self, $kernel) = @_[OBJECT, KERNEL];
-  $_[KERNEL]->delay( 'reconnect', $RECONNECT_TIMEOUT );
-  $_[KERNEL]->delay( '_get_time', $RECONNECT_TIMEOUT / 2 );
-}
-
-
 
 =head1 OTHER METHODS
 
 =head2 AUTOLOAD
 
 Bot::BasicBot implements AUTOLOAD for sending arbitrary states to the
-underlying L<POE::Component::IRC> compoment. So for a $bot object, sending
+underlying L<POE::Component::IRC|POE::Component::IRC> component. So for a
+C<$bot> object, sending
 
     $bot->foo("bar");
 
@@ -1498,6 +1471,7 @@ sub AUTOLOAD {
     our $AUTOLOAD;
     $AUTOLOAD =~ s/.*:://;
     $poe_kernel->post( $self->{IRCNAME}, $AUTOLOAD, $self->charset_encode(@_) );
+    return;
 }
 
 =head2 log
@@ -1515,6 +1489,7 @@ sub log {
       chomp $log_entry;
       print STDERR "$log_entry\n";
     }
+    return;
 }
 
 =head2 ignore_nick($nick)
@@ -1525,7 +1500,7 @@ the ignore list
 =cut
 
 sub ignore_nick {
-    local $_;
+    local $_ = undef;
     my $self = shift;
     my $nick = shift;
     return grep { $nick eq $_ } @{ $self->{ignore_list} };
@@ -1630,26 +1605,13 @@ AUTOLOAD stuff, better interactive help, and a few API tidies.
 Maintainership for a while was in the hands of Simon Kent
 E<lt>simon@hitherto.netE<gt>. Don't know what he did. :-)
 
-I recieved patches for tracking joins and parts from Silver, sat on
-them for two months, and have finally applied them. Thanks, dude. He also
+I (Tom Insam) recieved patches for tracking joins and parts from Silver, sat
+on them for two months, and have finally applied them. Thanks, dude. He also
 sent me changes for the tick event API, which made sense.
 
-=head1 SYSTEM REQUIREMENTS
-
-Bot::BasicBot is based on POE, and really needs the latest version as
-of writing (0.22), since POE::Wheel::Run (used for forking) is still
-under development, and the interface recently changed. With earlier
-versions of POE, forking will not work, and the makefile process will
-carp if you have < 0.22. Sorry.
-
-You also need POE::Component::IRC.
+In November 2010, maintainership moved to Hinrik E<Ouml>rn SigurE<eth>sson.
 
 =head1 BUGS
-
-During the make, make test make install process, POE will moan about
-its kernel not being run. I'll try and gag it in future releases, but
-hey, release early, release often, and it's not a fatal error. It just
-looks untidy.
 
 Don't call your bot "0".
 
