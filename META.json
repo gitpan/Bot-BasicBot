@@ -18,6 +18,7 @@
       "directory" : [
          "t",
          "xt",
+         "utils",
          "examples"
       ]
    },
@@ -50,7 +51,7 @@
          "web" : "http://github.com/hinrik/bot-basicbot"
       }
    },
-   "version" : "0.82",
+   "version" : "0.83",
    "x_authority" : "cpan:HINRIK"
 }
 

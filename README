@@ -477,6 +477,10 @@ OTHER METHODS
     Converts a list of perl strings into a list of byte sequences, using the
     bot's charset. See charset_decode.
 
+HELP AND SUPPORT
+    If you have any questions or issues, you can drop by in #poe @
+    irc.perl.org, where I (Hinrik) am usually around.
+
 AUTHOR
     Tom Insam <tom@jerakeen.org>
 

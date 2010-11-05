@@ -47,7 +47,7 @@ BEGIN {
   $Bot::BasicBot::AUTHORITY = 'cpan:HINRIK';
 }
 BEGIN {
-  $Bot::BasicBot::VERSION = '0.82';
+  $Bot::BasicBot::VERSION = '0.83';
 }
 
 use strict;
@@ -609,9 +609,12 @@ sub say {
     my $who = ( $args->{channel} eq "msg" ) ? $args->{who} : $args->{channel};
 
     unless ( $who && $body ) {
-        print STDERR "Can't PRIVMSG without target and body\n";
-        print STDERR " called from ".([caller]->[0])." line ".([caller]->[2])."\n";
-        print STDERR " who = '$who'\n body = '$body'\n";
+        $self->log( "Can't PRIVMSG without target and body\n"
+              . " called from "
+              . ( [caller]->[0] )
+              . " line "
+              . ( [caller]->[2] ) . "\n"
+              . " who = '$who'\n body = '$body'\n" );
         return;
     }
 
@@ -1221,7 +1224,7 @@ sub irc_received_state {
     ### what did we get back?
 
     # nothing? Say nothing then
-    return unless $return;
+    return unless defined $return;
 
     # a string?  Say it how we were addressed then
     unless ( ref($return) ) {
@@ -1385,7 +1388,7 @@ sub names_done_state {
   my $built = delete $self->{building_channel_data}{$channel};
   return unless $built;
   $self->{channel_data}{$channel} = $built;
-  #$self->names({ channel => $channel, names => $built });
+  $self->got_names({ channel => $channel, names => $built });
   return;
 }
 
@@ -1584,6 +1587,11 @@ sub charset_encode {
   #warn Dumper({ encoded => \@r });
   return @r;
 }
+
+=head1 HELP AND SUPPORT
+
+If you have any questions or issues, you can drop by in #poe @ irc.perl.org,
+where I (Hinrik) am usually around.
 
 =head1 AUTHOR
 
