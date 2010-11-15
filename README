@@ -37,11 +37,11 @@ DESCRIPTION
     then call "new" and "run" on it.
 
 STARTING THE BOT
-  new( key => value, .. )
-    Creates a new instance of the class. Name value pairs may be passed
-    which will have the same effect as calling the method of that name with
-    the value supplied. Returns a Bot::BasicBot object, that you can call
-    'run' on later.
+  new
+    Creates a new instance of the class. Key/value pairs may be passed which
+    will have the same effect as calling the method of that name with the
+    value supplied. Returns a Bot::BasicBot object, that you can call 'run'
+    on later.
 
     eg:
 
@@ -63,12 +63,12 @@ METHODS TO OVERRIDE
     methods - the (implicit) first parameter to all of them will be the bot
     object.
 
-  init()
+  init
     called when the bot is created, as part of new(). Override to provide
     your own init. Return a true value for a successful init, or undef if
     you failed, in which case new() will die.
 
-  said($args)
+  said
     This is the main method that you'll want to override in your subclass -
     it's the one called by default whenever someone says anything that we
     can hear, either in a public channel or to us in private that we
@@ -107,7 +107,7 @@ METHODS TO OVERRIDE
 
     Returning undef will cause nothing to be said.
 
-  emoted( $args )
+  emoted
     This is a secondary method that you may wish to override. It gets called
     when someone in channel 'emotes', instead of talking. In its default
     configuration, it will simply pass anything emoted on channel through to
@@ -115,27 +115,27 @@ METHODS TO OVERRIDE
 
     "emoted" receives the same data hash as "said".
 
-  chanjoin( $mess )
-    Called when someone joins a channel. $mess is an object similar to a
-    said() message, $mess->{who} is the nick of the user who joined,
-    $mess->{channel} is the channel they joined.
+  chanjoin
+    Called when someone joins a channel. It receives a hashref argument
+    similar to the one received by said(). The key 'who' is the nick of the
+    user who joined, while 'channel' is the channel they joined.
 
     This is a do-nothing implementation, override this in your subclass.
 
-  chanpart( $mess )
-    Called when someone leaves a channel. $mess is an object similar to a
-    said() message, $mess->{who} is the nick of the user who left,
-    $mess->{channel} is the channel they left.
+  chanpart
+    Called when someone joins a channel. It receives a hashref argument
+    similar to the one received by said(). The key 'who' is the nick of the
+    user who parted, while 'channel' is the channel they parted.
 
     This is a do-nothing implementation, override this in your subclass.
 
-  got_names( $mess )
+  got_names
     Whenever we have been given a definitive list of 'who is in the
-    channel', this function will be called. As usual, $mess is a hash.
-    $mess->{channel} will be the channel we have information for,
-    $mess->{names} is a hashref, where the keys are the nicks of the users,
-    and the values are more hashes, containing the two keys 'op' and
-    'voice', indicating if the user is a chanop or voiced respectively.
+    channel', this function will be called. It receives a hash reference as
+    an argument. The key 'channel' will be the channel we have information
+    for, 'names' is a hashref where the keys are the nicks of the users, and
+    the values are more hashes, containing the two keys 'op' and 'voice',
+    indicating if the user is a chanop or voiced respectively.
 
     The reply value is ignored.
 
@@ -145,21 +145,23 @@ METHODS TO OVERRIDE
     that the names list can be changed by other events - kicks, joins, etc,
     and this method won't be called when that happens.
 
-  topic( $mess )
-    Called when the topic of the channel changes. $mess->{channel} is the
-    channel the topic was set in, $mess->{who} is the nick of the user who
-    changed the channel, and $mess->{topic} will be the new topic of the
-    channel.
+  topic
+    Called when the topic of the channel changes. It receives a hashref
+    argument. The key 'channel' is the channel the topic was set in, and
+    'who' is the nick of the user who changed the channel, 'topic' will be
+    the new topic of the channel.
 
-  nick_change( $mess )
-    When a user changes nicks, this will be called. $mess looks like
+  nick_change
+    When a user changes nicks, this will be called. It receives a hashref
+    which will look like this:
 
       { from => "old_nick",
         to => "new_nick",
       }
 
-  kicked( $mess )
-    Called when a user is kicked from the channel. $mess looks like:
+  kicked
+    Called when a user is kicked from the channel. It receives a hashref
+    which will look like this:
 
       { channel => "#channel",
         who => "nick",
@@ -193,8 +195,8 @@ METHODS TO OVERRIDE
     An optional method to override, gets called after we have connected to
     the server
 
-  userquit( $mess )
-    $mess looks like
+  userquit
+    Receives a hashref which will look like:
 
         { who => "nick that quit",
           body => "quit message",
@@ -204,11 +206,11 @@ BOT METHODS
     There are a few methods you can call on the bot object to do things.
     These are as follows:
 
-  schedule_tick(time)
-    Causes the tick event to be called in 'time' seconds (or 5 seconds if
-    time is left unspecified). Note that if the tick event is due to be
-    called already, this will override it, you can't schedule multiple
-    future events with this funtction.
+  schedule_tick
+    Takes an integer as an argument. Causes the tick event to be called
+    after that many seconds (or 5 seconds if no argument is provided). Note
+    that if the tick event is due to be called already, this will override
+    it. You can't schedule multiple future events with this funtction.
 
   forkit
     This method allows you to fork arbitrary background processes. They will
@@ -258,8 +260,9 @@ BOT METHODS
         that you specify them, and it is the responsibility of your "run"
         routine to pick them up and make sense of them.
 
-  say( key => value, .. )
-    Say something to someone. You should pass the following arguments:
+  say
+    Say something to someone. Takes a list of key/value pairs as arguments.
+    You should pass the following arguments:
 
     who The nick of who you are saying this to (optional inside a channel.)
 
@@ -280,16 +283,33 @@ BOT METHODS
     any data it is sent, and throw it to STDOUT, where POE::Wheel::Run can
     pass it on to a handler.
 
-  emote( key => value, .. )
+  emote
     "emote" will return data to channel, but emoted (as if you'd said "/me
     writes a spiffy new bot" in most clients). It takes the same arguments
     as "say", listed above.
 
-  reply($mess, $body)
-    Reply to a message $mess. Will reply to an incoming message with the
-    text '$body', in a privmsg if $mess was a privmsg, in channel if not,
-    and prefixes if $mess was prefixed. Mostly a shortcut method - it's
-    roughly equivalent to $mess->{body} = $body; $self->say($mess);
+  notice
+    "notice" will send a IRC notice to the channel. This is typically used
+    by bots to not break the IRC conversations flow. The message will appear
+    as:
+
+        -nick- message here
+
+    It takes the same arguments as "say", listed above. Example:
+
+        $bot->notice(
+            channel => '#bot_basicbot_test',
+            body => 'This is a notice'
+        );
+
+  reply
+    Takes two arguments, a hashref containing information about an incoming
+    message, and a reply message. It will reply in a privmsg if the incoming
+    one was a privmsg, in channel if not, and with prefixes if the incoming
+    one was prefixed. Mostly a shortcut method - it's roughly equivalent to
+
+     $mess->{body} = $body;
+     $self->say($mess);
 
   channel_data
 ATTRIBUTES
@@ -463,7 +483,7 @@ OTHER METHODS
     Takes a nick and hostname (of the form "nick!hostname") and returns just
     the nick
 
-  charset_decode( foo, bar, baz )
+  charset_decode
     Converts a string of bytes into a perl string, using the bot's charset.
     (under perls before 5.8, just returns the thing it's passed.
 
@@ -473,7 +493,7 @@ OTHER METHODS
     http://search.cpan.org/~dankogai/Encode-2.09/Encode.pm#Handling_Malforme
     d_Data
 
-  charset_encode( foo, bar, baz )
+  charset_encode
     Converts a list of perl strings into a list of byte sequences, using the
     bot's charset. See charset_decode.
 

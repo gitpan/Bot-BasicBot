@@ -1,5 +1,11 @@
 Revision history Bot::BasicBot
 
+0.84  Mon Nov 15 20:05:09 GMT 2010
+  - Ignore empty strings returned by said()
+  - Adjust the method documentation a bit to avoid confusion
+  - Added the notice() method to send IRC notices.
+    Useful when implementing bots.
+
 0.83  Fri Nov 5 12:40:00 CET 2010
   - Applied patch from Mario Domgörgen to use log() for warnings (RT #51804)
   - Only ignore said() when it returns undef/empty list, not false

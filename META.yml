@@ -27,5 +27,5 @@ resources:
   homepage: http://search.cpan.org/dist/Bot-BasicBot/
   license: http://dev.perl.org/licenses/
   repository: git://github.com/hinrik/bot-basicbot.git
-version: 0.83
+version: 0.84
 x_authority: cpan:HINRIK
