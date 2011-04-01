@@ -115,6 +115,9 @@ METHODS TO OVERRIDE
 
     "emoted" receives the same data hash as "said".
 
+  noticed
+    This is like "said", except for notices instead of normal messages.
+
   chanjoin
     Called when someone joins a channel. It receives a hashref argument
     similar to the one received by said(). The key 'who' is the nick of the

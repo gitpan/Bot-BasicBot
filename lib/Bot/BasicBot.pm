@@ -47,7 +47,7 @@ BEGIN {
   $Bot::BasicBot::AUTHORITY = 'cpan:HINRIK';
 }
 BEGIN {
-  $Bot::BasicBot::VERSION = '0.85';
+  $Bot::BasicBot::VERSION = '0.86';
 }
 
 use strict;
@@ -125,6 +125,7 @@ sub run {
                 irc_msg          => "irc_said_state",
                 irc_public       => "irc_said_state",
                 irc_ctcp_action  => "irc_emoted_state",
+                irc_notice       => "irc_noticed_state",
 
                 irc_disconnected => "irc_disconnected_state",
                 irc_error        => "irc_error_state",
@@ -252,6 +253,16 @@ C<emoted> receives the same data hash as C<said>.
 =cut
 
 sub emoted {
+    return shift->said(@_);
+}
+
+=head2 noticed
+
+This is like C<said>, except for notices instead of normal messages.
+
+=cut
+
+sub noticed {
     return shift->said(@_);
 }
 
@@ -1118,6 +1129,11 @@ sub irc_said_state {
 
 sub irc_emoted_state {
     irc_received_state( 'emoted', 'emote', @_ );
+    return;
+}
+
+sub irc_noticed_state {
+    irc_received_state( 'noticed', 'emote', @_ );
     return;
 }
 

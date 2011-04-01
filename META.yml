@@ -20,12 +20,12 @@ no_index:
     - utils
     - examples
 requires:
-  POE::Component::IRC: 6.55
+  POE::Component::IRC: 6.56
   Text::Wrap: 0
 resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Bot-BasicBot
   homepage: http://search.cpan.org/dist/Bot-BasicBot/
   license: http://dev.perl.org/licenses/
   repository: git://github.com/hinrik/bot-basicbot.git
-version: 0.85
+version: 0.86
 x_authority: cpan:HINRIK
