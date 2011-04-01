@@ -30,7 +30,7 @@
       },
       "runtime" : {
          "requires" : {
-            "POE::Component::IRC" : "6.50",
+            "POE::Component::IRC" : "6.55",
             "Text::Wrap" : 0
          }
       }
@@ -51,7 +51,7 @@
          "web" : "http://github.com/hinrik/bot-basicbot"
       }
    },
-   "version" : "0.84",
+   "version" : "0.85",
    "x_authority" : "cpan:HINRIK"
 }
 

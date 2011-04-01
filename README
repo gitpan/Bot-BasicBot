@@ -12,12 +12,12 @@ SYNOPSIS
         server => "irc.example.com",
         port   => "6667",
         channels => ["#bottest"],
-    
+
         nick      => "basicbot",
         alt_nicks => ["bbot", "simplebot"],
         username  => "bot",
         name      => "Yet Another Bot",
-    
+
         ignore_list => [qw(dipsy dadadodo laotse)],
 
         charset => "utf-8", # charset the bot assumes the channel is using
@@ -311,7 +311,20 @@ BOT METHODS
      $mess->{body} = $body;
      $self->say($mess);
 
+  pocoirc
+    Takes no arguments. Returns the underlying POE::Component::IRC::State
+    object used by Bot::BasicBot.
+
   channel_data
+    Takes a channel names as a parameter, and returns a hash of hashes. The
+    keys are the nicknames in the channel, the values are hashes containing
+    the keys "voice" and "op", indicating whether these users are voiced or
+    opped in the channel. This method is only here for backwards
+    compatability. You'll probably get more use out of
+    POE::Component::IRC::State's methods (which this method is merely a
+    wrapper for). You can access the POE::Component::IRC::State object
+    through Bot::BasicBot's "pocoirc" method.
+
 ATTRIBUTES
     Get or set methods. Changing most of these values when connected won't
     cause sideffects. e.g. changing the server will not cause a disconnect
@@ -380,85 +393,10 @@ ATTRIBUTES
     Set to '1' to disable the built-in flood protection of
     POE::Compoent::IRC
 
-STATES
-    These are the POE states that we register in order to listen for IRC
-    events. For the most part you don't need to worry about these, unless
-    you want to override them to do something clever.
+  no_run
+    Tells Bot::BasicBot to not run the POE kernel at the end of "run", in
+    case you want to do that yourself.
 
-  start_state
-    Called when we start. Used to fire a "connect to irc server event"
-
-  stop_state
-    Called when we're stopping. Shutdown the bot correctly.
-
-  irc_001_state
-    Called when we connect to the irc server. This is used to tell the irc
-    server that we'd quite like to join the channels.
-
-    We also ignore ourselves. We don't want to hear what we have to say.
-
-  irc_disconnected_state
-    Called if we are disconnected from the server. Logs the error.
-
-  irc_error_state
-    Called if there is an irc server error. Logs the error.
-
-  irc_kicked_state
-    Called on kick. If we're kicked then it's best to do nothing. Bots are
-    normally called in wrapper that restarts them if we die, which may end
-    us up in a busy loop. Anyway, if we're not wanted, the best thing to do
-    would be to hang around off channel.
-
-  irc_join_state
-    Called if someone joins. Used for nick tracking
-
-  irc_nick_state
-    Called if someone changes nick. Used for nick tracking.
-
-  irc_mode_state
-  irc_quit_state
-  irc_said_state
-    Called if we recieve a private or public message. This formats it into a
-    nicer format and calls 'said'
-
-  irc_emoted_state
-    Called if someone "emotes" on channel, rather than directly saying
-    something. Currently passes the emote striaght to "irc_said_state" which
-    deals with it as if it was a spoken phrase.
-
-  irc_received_state
-    Called by "irc_said_state" and "irc_emoted_state" in order to format
-    channel input into a more copable-with format.
-
-  irc_chanjoin_state
-    Called if someone joins a channel.
-
-  irc_chanpart_state
-    Called if someone parts a channel.
-
-  irc_chan_received_state
-    Called by "irc_chanjoin_state" and "irc_chanpart_state" in order to
-    format channel joins and parts into a more copable-with format.
-
-  fork_close_state
-    Called whenever a process forked by POE::Wheel::Run (in "forkit")
-    terminates, and allows us to delete the object and associated data from
-    memory.
-
-  fork_error_state
-    Called if a process forked by POE::Wheel::Run (in "forkit") hits an
-    error condition for any reason. Does nothing, but can be overloaded in
-    derived classes to be more useful
-
-  tick_state
-    the POE state for the tick event. Reschedules a tick event for the
-    future if the tick method returned a value.
-
-  names_state
-  names_done_state
-  topic_raw_state
-  topic_state
-  shutdown_state
 OTHER METHODS
   AUTOLOAD
     Bot::BasicBot implements AUTOLOAD for sending arbitrary states to the
