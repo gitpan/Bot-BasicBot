@@ -5,7 +5,7 @@
       "Hinrik \u00c3\u0096rn Sigur\u00c3\u00b0sson <hinrik.sig@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.102342, CPAN::Meta::Converter version 2.102400",
+   "generated_by" : "Dist::Zilla version 4.200004, CPAN::Meta::Converter version 2.110440",
    "license" : [
       "perl_5"
    ],
@@ -30,7 +30,9 @@
       },
       "runtime" : {
          "requires" : {
-            "POE::Component::IRC" : "6.56",
+            "IRC::Utils" : 0,
+            "POE" : 0,
+            "POE::Component::IRC" : "6.62",
             "Text::Wrap" : 0
          }
       }
@@ -51,7 +53,7 @@
          "web" : "http://github.com/hinrik/bot-basicbot"
       }
    },
-   "version" : "0.86",
+   "version" : "0.87",
    "x_authority" : "cpan:HINRIK"
 }
 

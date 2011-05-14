@@ -20,8 +20,6 @@ SYNOPSIS
 
         ignore_list => [qw(dipsy dadadodo laotse)],
 
-        charset => "utf-8", # charset the bot assumes the channel is using
-
       );
       $bot->run();
 
@@ -37,7 +35,7 @@ DESCRIPTION
     then call "new" and "run" on it.
 
 STARTING THE BOT
-  new
+  "new"
     Creates a new instance of the class. Key/value pairs may be passed which
     will have the same effect as calling the method of that name with the
     value supplied. Returns a Bot::BasicBot object, that you can call 'run'
@@ -47,7 +45,7 @@ STARTING THE BOT
 
       my $bot = Bot::BasicBot->new( nick => 'superbot', channels => [ '#superheroes' ] );
 
-  run()
+  "run"
     Runs the bot. Hands the control over to the POE core.
 
 STOPPING THE BOT
@@ -63,12 +61,12 @@ METHODS TO OVERRIDE
     methods - the (implicit) first parameter to all of them will be the bot
     object.
 
-  init
+  "init"
     called when the bot is created, as part of new(). Override to provide
     your own init. Return a true value for a successful init, or undef if
     you failed, in which case new() will die.
 
-  said
+  "said"
     This is the main method that you'll want to override in your subclass -
     it's the one called by default whenever someone says anything that we
     can hear, either in a public channel or to us in private that we
@@ -107,7 +105,7 @@ METHODS TO OVERRIDE
 
     Returning undef will cause nothing to be said.
 
-  emoted
+  "emoted"
     This is a secondary method that you may wish to override. It gets called
     when someone in channel 'emotes', instead of talking. In its default
     configuration, it will simply pass anything emoted on channel through to
@@ -115,24 +113,24 @@ METHODS TO OVERRIDE
 
     "emoted" receives the same data hash as "said".
 
-  noticed
+  "noticed"
     This is like "said", except for notices instead of normal messages.
 
-  chanjoin
+  "chanjoin"
     Called when someone joins a channel. It receives a hashref argument
     similar to the one received by said(). The key 'who' is the nick of the
     user who joined, while 'channel' is the channel they joined.
 
     This is a do-nothing implementation, override this in your subclass.
 
-  chanpart
+  "chanpart"
     Called when someone joins a channel. It receives a hashref argument
     similar to the one received by said(). The key 'who' is the nick of the
     user who parted, while 'channel' is the channel they parted.
 
     This is a do-nothing implementation, override this in your subclass.
 
-  got_names
+  "got_names"
     Whenever we have been given a definitive list of 'who is in the
     channel', this function will be called. It receives a hash reference as
     an argument. The key 'channel' will be the channel we have information
@@ -148,25 +146,27 @@ METHODS TO OVERRIDE
     that the names list can be changed by other events - kicks, joins, etc,
     and this method won't be called when that happens.
 
-  topic
+  "topic<"
     Called when the topic of the channel changes. It receives a hashref
     argument. The key 'channel' is the channel the topic was set in, and
     'who' is the nick of the user who changed the channel, 'topic' will be
     the new topic of the channel.
 
-  nick_change
+  "nick_change"
     When a user changes nicks, this will be called. It receives a hashref
     which will look like this:
 
-      { from => "old_nick",
+      {
+        from => "old_nick",
         to => "new_nick",
       }
 
-  kicked
+  "kicked"
     Called when a user is kicked from the channel. It receives a hashref
     which will look like this:
 
-      { channel => "#channel",
+      {
+        channel => "#channel",
         who => "nick",
         kicked => "kicked",
         reason => "reason",
@@ -174,7 +174,7 @@ METHODS TO OVERRIDE
 
     The reply value is ignored.
 
-  tick()
+  "tick"
     This is an event called every regularly. The function should return the
     amount of time until the tick event should next be called. The default
     tick is called 5 seconds after the bot starts, and the default
@@ -187,21 +187,22 @@ METHODS TO OVERRIDE
     Call the schedule_tick event to schedule a tick event without waiting
     for the next tick.
 
-  help
+  "help"
     This is the other method that you should override. This is the text that
     the bot will respond to if someone simply says help to it. This should
     be considered a special case which you should not attempt to process
     yourself. Saying help to a bot should have no side effects whatsoever
     apart from returning this text.
 
-  connected
+  "connected<"
     An optional method to override, gets called after we have connected to
     the server
 
-  userquit
+  "userquit"
     Receives a hashref which will look like:
 
-        { who => "nick that quit",
+        {
+          who => "nick that quit",
           body => "quit message",
         }
 
@@ -209,13 +210,13 @@ BOT METHODS
     There are a few methods you can call on the bot object to do things.
     These are as follows:
 
-  schedule_tick
+  "schedule_tick"
     Takes an integer as an argument. Causes the tick event to be called
     after that many seconds (or 5 seconds if no argument is provided). Note
     that if the tick event is due to be called already, this will override
     it. You can't schedule multiple future events with this funtction.
 
-  forkit
+  "forkit"
     This method allows you to fork arbitrary background processes. They will
     run concurrently with the main bot, returning their output to a handler
     routine. You should call "forkit" in response to specific events in your
@@ -263,7 +264,7 @@ BOT METHODS
         that you specify them, and it is the responsibility of your "run"
         routine to pick them up and make sense of them.
 
-  say
+  "say"
     Say something to someone. Takes a list of key/value pairs as arguments.
     You should pass the following arguments:
 
@@ -286,12 +287,12 @@ BOT METHODS
     any data it is sent, and throw it to STDOUT, where POE::Wheel::Run can
     pass it on to a handler.
 
-  emote
+  "emote"
     "emote" will return data to channel, but emoted (as if you'd said "/me
     writes a spiffy new bot" in most clients). It takes the same arguments
     as "say", listed above.
 
-  notice
+  "notice"
     "notice" will send a IRC notice to the channel. This is typically used
     by bots to not break the IRC conversations flow. The message will appear
     as:
@@ -305,7 +306,7 @@ BOT METHODS
             body => 'This is a notice'
         );
 
-  reply
+  "reply"
     Takes two arguments, a hashref containing information about an incoming
     message, and a reply message. It will reply in a privmsg if the incoming
     one was a privmsg, in channel if not, and with prefixes if the incoming
@@ -314,11 +315,11 @@ BOT METHODS
      $mess->{body} = $body;
      $self->say($mess);
 
-  pocoirc
+  "pocoirc"
     Takes no arguments. Returns the underlying POE::Component::IRC::State
     object used by Bot::BasicBot.
 
-  channel_data
+  "channel_data"
     Takes a channel names as a parameter, and returns a hash of hashes. The
     keys are the nicknames in the channel, the values are hashes containing
     the keys "voice" and "op", indicating whether these users are voiced or
@@ -339,25 +340,25 @@ ATTRIBUTES
     The usual way of calling these is as keys to the hash passed to the
     'new' method.
 
-  server
+  "server"
     The server we're going to connect to. Defaults to "irc.perl.org".
 
-  port
+  "port"
     The port we're going to use. Defaults to "6667"
 
-  password
+  "password"
     The server password for the server we're going to connect to. Defaults
     to undef.
 
-  ssl
+  "ssl"
     A boolean to indicate whether or not the server we're going to connect
     to is an SSL server. Defaults to 0.
 
-  nick
+  "nick"
     The nick we're going to use. Defaults to five random letters and numbers
     followed by the word "bot"
 
-  alt_nicks
+  "alt_nicks"
     Alternate nicks that this bot will be known by. These are not nicks that
     the bot will try if it's main nick is taken, but rather other nicks that
     the bot will recognise if it is addressed in a public channel as the
@@ -365,43 +366,39 @@ ATTRIBUTES
     bots...e.g, your bot can answer to the name "infobot: " even though it
     isn't really.
 
-  username
+  "username"
     The username we'll claim to have at our ip/domain. By default this will
     be the same as our nick.
 
-  name
+  "name"
     The name that the bot will identify itself as. Defaults to "$nick bot"
     where $nick is the nick that the bot uses.
 
-  channels
+  "channels"
     The channels we're going to connect to.
 
-  quit_message
+  "quit_message"
     The quit message. Defaults to "Bye".
 
-  ignore_list
+  "ignore_list"
     The list of irc nicks to ignore public messages from (normally other
     bots.) Useful for stopping bot cascades.
 
-  charset
+  "charset"
     IRC has no defined character set for putting high-bit chars into
-    channel. In general, people tend to assume latin-1, but in case your
-    channel thinks differently, the bot can be told about different
-    charsets.
+    channel. This attribute sets the encoding to be used for outgoing
+    messages. Defaults to 'utf8'.
 
-    This feature requires perl 5.8+, I'm not fannying about with charsets
-    under any other version of perl.
-
-  flood
+  "flood"
     Set to '1' to disable the built-in flood protection of
     POE::Compoent::IRC
 
-  no_run
+  "no_run"
     Tells Bot::BasicBot to not run the POE kernel at the end of "run", in
     case you want to do that yourself.
 
 OTHER METHODS
-  AUTOLOAD
+  "AUTOLOAD"
     Bot::BasicBot implements AUTOLOAD for sending arbitrary states to the
     underlying POE::Component::IRC component. So for a $bot object, sending
 
@@ -411,30 +408,27 @@ OTHER METHODS
 
         $poe_kernel->post(BASICBOT_ALIAS, "foo", "bar");
 
-  log
+  "log"
     Logs the message. This method merely prints to STDERR - If you want
     smarter logging, override this method - it will have simple text strings
     passed in @_.
 
-  ignore_nick($nick)
-    Return true if this nick should be ignored. Ignores anything in the
-    ignore list
+  "ignore_nick"
+    Takes a nick name as an argument. Return true if this nick should be
+    ignored. Ignores anything in the ignore list
 
-  nick_strip
+  "nick_strip"
     Takes a nick and hostname (of the form "nick!hostname") and returns just
     the nick
 
-  charset_decode
-    Converts a string of bytes into a perl string, using the bot's charset.
-    (under perls before 5.8, just returns the thing it's passed.
+  "charset_decode"
+    Converts a string of bytes from IRC (uses "decode_irc" from IRC::Utils
+    internally) and returns a Perl string.
 
-    Takes a list of strings, returns a list of strings, this is useful in
-    the contexts that I tend to be calling it from. Bytes that cannot be
-    decoded are converted to '?' symbols - see
-    http://search.cpan.org/~dankogai/Encode-2.09/Encode.pm#Handling_Malforme
-    d_Data
+    It can also takes a list (or arrayref or hashref) of strings, and return
+    a list of strings
 
-  charset_encode
+  "charset_encode"
     Converts a list of perl strings into a list of byte sequences, using the
     bot's charset. See charset_decode.
 
@@ -466,17 +460,18 @@ CREDITS
 
     In November 2010, maintainership moved to Hinrik Örn Sigurðsson.
 
-BUGS
-    Don't call your bot "0".
-
-    Nick tracking blatantly doesn't work yet. In Progress.
-
-    "fork_error_state" handlers sometimes seem to cause the bot to segfault.
-    I'm not yet sure if this is a POE::Wheel::Run problem, or a problem in
-    our implementation.
-
 SEE ALSO
     POE, POE::Component::IRC
 
     Possibly Infobot, at http://www.infobot.org
+
+POD ERRORS
+    Hey! The above document had some coding errors, which are explained
+    below:
+
+    Around line 1072:
+        Unterminated C<...> sequence
+
+    Around line 1125:
+        Unterminated C<...> sequence
 

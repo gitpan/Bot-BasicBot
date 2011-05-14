@@ -20,10 +20,12 @@ my %WriteMakefileArgs = (
   'LICENSE' => 'perl',
   'NAME' => 'Bot::BasicBot',
   'PREREQ_PM' => {
-    'POE::Component::IRC' => '6.56',
+    'IRC::Utils' => '0',
+    'POE' => '0',
+    'POE::Component::IRC' => '6.62',
     'Text::Wrap' => '0'
   },
-  'VERSION' => '0.86',
+  'VERSION' => '0.87',
   'test' => {
     'TESTS' => 't/*.t'
   }
