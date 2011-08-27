@@ -1,5 +1,9 @@
 Revision history Bot::BasicBot
 
+0.88  Sat Aug 27 15:29:39 GMT 2011
+  - Add a DESTROY method so it won't get AUTOLOADed
+  - Fix incorrect documentation of nick_change() return values
+
 0.87  Sat May 14 18:48:55 GMT 2011
   - Make charset_decode() use IRC::Utils::decode_irc() internally
   - Make utf8 the default outgoing message encoding

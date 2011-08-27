@@ -3,7 +3,7 @@ BEGIN {
   $Bot::BasicBot::AUTHORITY = 'cpan:HINRIK';
 }
 BEGIN {
-  $Bot::BasicBot::VERSION = '0.87';
+  $Bot::BasicBot::VERSION = '0.88';
 }
 
 use strict;
@@ -825,6 +825,9 @@ sub AUTOLOAD {
     return;
 }
 
+# so it won't get AUTOLOADed
+sub DESTROY { return }
+
 sub log {
     my $self = shift;
     for (@_) {
@@ -1069,7 +1072,7 @@ want to be able to do something as soon as possible. Also be aware that
 the names list can be changed by other events - kicks, joins, etc, and this
 method won't be called when that happens.
 
-=head2 C<topic<
+=head2 C<topic>
 
 Called when the topic of the channel changes. It receives a hashref
 argument. The key 'channel' is the channel the topic was set in, and 'who'
@@ -1078,13 +1081,8 @@ topic of the channel.
 
 =head2 C<nick_change>
 
-When a user changes nicks, this will be called. It receives a hashref which
-will look like this:
-
-  {
-    from => "old_nick",
-    to => "new_nick",
-  }
+When a user changes nicks, this will be called. It receives two arguments:
+the old nickname and the new nickname.
 
 =head2 C<kicked>
 
@@ -1122,7 +1120,7 @@ should be considered a special case which you should not attempt to
 process yourself.  Saying help to a bot should have no side effects
 whatsoever apart from returning this text.
 
-=head2 C<connected<
+=head2 C<connected>
 
 An optional method to override, gets called after we have connected
 to the server
@@ -1446,7 +1444,8 @@ I (Tom Insam) recieved patches for tracking joins and parts from Silver,
 sat on them for two months, and have finally applied them. Thanks, dude.
 He also sent me changes for the tick event API, which made sense.
 
-In November 2010, maintainership moved to Hinrik E<Ouml>rn SigurE<eth>sson.
+In November 2010, maintainership moved to Hinrik E<Ouml>rn
+SigurE<eth>sson (L<hinrik.sig@gmail.com>).
 
 =head1 SEE ALSO
 

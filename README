@@ -146,20 +146,15 @@ METHODS TO OVERRIDE
     that the names list can be changed by other events - kicks, joins, etc,
     and this method won't be called when that happens.
 
-  "topic<"
+  "topic"
     Called when the topic of the channel changes. It receives a hashref
     argument. The key 'channel' is the channel the topic was set in, and
     'who' is the nick of the user who changed the channel, 'topic' will be
     the new topic of the channel.
 
   "nick_change"
-    When a user changes nicks, this will be called. It receives a hashref
-    which will look like this:
-
-      {
-        from => "old_nick",
-        to => "new_nick",
-      }
+    When a user changes nicks, this will be called. It receives two
+    arguments: the old nickname and the new nickname.
 
   "kicked"
     Called when a user is kicked from the channel. It receives a hashref
@@ -194,7 +189,7 @@ METHODS TO OVERRIDE
     yourself. Saying help to a bot should have no side effects whatsoever
     apart from returning this text.
 
-  "connected<"
+  "connected"
     An optional method to override, gets called after we have connected to
     the server
 
@@ -458,20 +453,11 @@ CREDITS
     sat on them for two months, and have finally applied them. Thanks, dude.
     He also sent me changes for the tick event API, which made sense.
 
-    In November 2010, maintainership moved to Hinrik Örn Sigurðsson.
+    In November 2010, maintainership moved to Hinrik Örn Sigurðsson
+    (hinrik.sig@gmail.com).
 
 SEE ALSO
     POE, POE::Component::IRC
 
     Possibly Infobot, at http://www.infobot.org
-
-POD ERRORS
-    Hey! The above document had some coding errors, which are explained
-    below:
-
-    Around line 1072:
-        Unterminated C<...> sequence
-
-    Around line 1125:
-        Unterminated C<...> sequence
 

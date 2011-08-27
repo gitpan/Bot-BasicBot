@@ -4,7 +4,7 @@ use warnings;
 
 
 
-use ExtUtils::MakeMaker 6.31;
+use ExtUtils::MakeMaker 6.30;
 
 
 
@@ -13,7 +13,7 @@ my %WriteMakefileArgs = (
   'AUTHOR' => 'Tom Insam <tom@jerakeen.org>, Hinrik Örn Sigurðsson <hinrik.sig@gmail.com>',
   'BUILD_REQUIRES' => {},
   'CONFIGURE_REQUIRES' => {
-    'ExtUtils::MakeMaker' => '6.31'
+    'ExtUtils::MakeMaker' => '6.30'
   },
   'DISTNAME' => 'Bot-BasicBot',
   'EXE_FILES' => [],
@@ -25,7 +25,7 @@ my %WriteMakefileArgs = (
     'POE::Component::IRC' => '6.62',
     'Text::Wrap' => '0'
   },
-  'VERSION' => '0.87',
+  'VERSION' => '0.88',
   'test' => {
     'TESTS' => 't/*.t'
   }
