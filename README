@@ -219,6 +219,10 @@ BOT METHODS
     which will block the bot from receiving or sending on channel whilst
     they take place if you don't fork them.
 
+    Inside the subroutine called by forkit, you can send output back to the
+    channel by printing lines (followd by "\n") to STDOUT. This has the same
+    effect as calling "Bot::BasicBot->say".
+
     "forkit" takes the following arguments:
 
     run A coderef to the routine which you want to run. Bear in mind that
@@ -233,6 +237,12 @@ BOT METHODS
         Optional. A method name within your current package which we can
         return the routine's data to. Defaults to the built-in method
         "say_fork_return" (which simply sends data to channel).
+
+    callback
+        Optional. A coderef to execute in place of the handler. If used, the
+        value of the handler argument is used to name the POE event. This
+        allows using closures and/or having multiple simultanious calls to
+        forkit with unique handler for each call.
 
     body
         Optional. Use this to pass on the body of the incoming message that
@@ -349,6 +359,13 @@ ATTRIBUTES
     A boolean to indicate whether or not the server we're going to connect
     to is an SSL server. Defaults to 0.
 
+  "localaddr"
+    The local address to use, for multihomed boxes. Defaults to undef (use
+    whatever source IP address the system deigns is appropriate).
+
+    A boolean to indicate whether IPv6 should be used. Defaults to undef
+    (use IPv4).
+
   "nick"
     The nick we're going to use. Defaults to five random letters and numbers
     followed by the word "bot"
@@ -460,4 +477,11 @@ SEE ALSO
     POE, POE::Component::IRC
 
     Possibly Infobot, at http://www.infobot.org
+
+POD ERRORS
+    Hey! The above document had some coding errors, which are explained
+    below:
+
+    Around line 1352:
+        Unknown directive: =head
 

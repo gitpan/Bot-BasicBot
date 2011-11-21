@@ -25,7 +25,7 @@ my %WriteMakefileArgs = (
     'POE::Component::IRC' => '6.62',
     'Text::Wrap' => '0'
   },
-  'VERSION' => '0.88',
+  'VERSION' => '0.89',
   'test' => {
     'TESTS' => 't/*.t'
   }
